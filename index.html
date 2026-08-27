@@ -30,6 +30,7 @@
   tr.hidden { display:none; }
   td.name { font-weight:650; white-space:nowrap; }
   td.name { position:relative; }
+  th.id-col, td.id-col { width:60px; min-width:60px; text-align:center; font-weight:700; color:var(--blue); }
   .delete-inline { margin-left:8px; padding:4px 7px; font-size:11px; background:#b44747; opacity:.15; }
   td.name:hover .delete-inline, .delete-inline:focus { opacity:1; }
   .context-menu { position:fixed; display:none; z-index:20; background:white; border:1px solid var(--line); border-radius:8px; box-shadow:0 4px 16px #17324d33; padding:6px; }
@@ -76,7 +77,7 @@
   </div>
   <section class="card">
     <div class="card-title">Todos los trabajadores</div>
-    <div class="table-wrap"><table><thead><tr><th>Nombre</th><th>Estado</th><th>Lunes</th><th>Martes</th><th>Miércoles</th><th>Jueves</th><th>Viernes</th><th>Total semanal</th></tr></thead><tbody id="body"></tbody></table></div>
+    <div class="table-wrap"><table><thead><tr><th class="id-col">N°</th><th>Nombre</th><th>Estado</th><th>Lunes</th><th>Martes</th><th>Miércoles</th><th>Jueves</th><th>Viernes</th><th>Total semanal</th></tr></thead><tbody id="body"></tbody></table></div>
   </section>
 </main>
 <div id="contextMenu" class="context-menu"><button id="contextModify">Modificar horario</button></div>
@@ -180,12 +181,12 @@ function render() {
   const term = search.value.trim().toLocaleLowerCase('es');
   body.innerHTML = '';
   let visible = 0;
-  people.forEach((person) => {
+  people.forEach((person, personIndex) => {
     if (term && !person.name.toLocaleLowerCase('es').includes(term)) return;
     visible++;
     const tr = document.createElement('tr');
     tr.dataset.name = person.name;
-    tr.innerHTML = '<td class="name">' + esc(person.name) + '<button class="delete-inline" title="Borrar trabajador">Borrar</button></td><td>' + esc(person.status) + '</td>' + personSchedule(person).map((value, index) => '<td class="day ' + (String(value).toLowerCase() === 'sin turno' ? 'no-turn' : '') + '" data-day="' + DAYS[index] + '">' + esc(value) + '</td>').join('') + '<td class="total">' + totalHours(person).toFixed(2).replace('.', ',') + ' h</td>';
+    tr.innerHTML = '<td class="id-col">' + (personIndex + 1) + '</td><td class="name">' + esc(person.name) + '<button class="delete-inline" title="Borrar trabajador">Borrar</button></td><td>' + esc(person.status) + '</td>' + personSchedule(person).map((value, index) => '<td class="day ' + (String(value).toLowerCase() === 'sin turno' ? 'no-turn' : '') + '" data-day="' + DAYS[index] + '">' + esc(value) + '</td>').join('') + '<td class="total">' + totalHours(person).toFixed(2).replace('.', ',') + ' h</td>';
     tr.querySelector('.name').addEventListener('click', () => { selected = { name: person.name, day: selected?.day || DAYS[0] }; selection.textContent = person.name; showSummary(person); showEditor(); render(); });
     tr.querySelector('.delete-inline').addEventListener('click', (event) => { event.stopPropagation(); selected = { name: person.name, day: DAYS[0] }; deleteSelectedPerson(); });
     tr.querySelectorAll('.day').forEach((cell) => {
