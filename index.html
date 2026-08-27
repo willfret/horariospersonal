@@ -55,6 +55,7 @@
   .day-inputs { display:grid; grid-template-columns:repeat(5,1fr); gap:6px; }
   .day-inputs input { width:100%; padding:8px; border:1px solid #b9cbd8; border-radius:7px; font-size:12px; }
   .day-inputs small { display:block; color:#607d8b; font-size:11px; margin-bottom:3px; }
+  #editHelp, #editForm { display:none !important; }
   @media (max-width:850px) { .panels { grid-template-columns:1fr; } }
   @media (max-width:700px) { header { padding:18px; } main { padding:14px; } .toolbar { padding:12px; } }
 </style>
@@ -137,10 +138,7 @@ function showSummary(person) {
   summary.innerHTML = '<div class="summary-grid"><div class="metric"><strong>' + total.toFixed(2).replace('.', ',') + ' h</strong><span>Total semanal</span></div><div class="metric"><strong>' + worked + '</strong><span>Días con horario</span></div><div class="metric"><strong>' + (worked ? (total/worked).toFixed(2).replace('.', ',') : '0') + ' h</strong><span>Promedio diario</span></div></div><div>' + schedule.map((v,i) => '<div><b>' + DAYS[i] + ':</b> ' + esc(v) + '</div>').join('') + '</div>';
 }
 function showEditor() {
-  if (!selected) { editForm.hidden = true; editHelp.hidden = false; return; }
-  editForm.hidden = false; editHelp.hidden = true; editName.value = selected.name;
-  editDay.innerHTML = DAYS.map(day => '<option>' + day + '</option>').join(''); editDay.value = selected.day;
-  const person = people.find(p => p.name === selected.name); editValue.value = edits[key(selected.name, selected.day)] ?? person.schedule[DAYS.indexOf(selected.day)];
+  return;
 }
 function esc(value) { return String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function deleteSelectedPerson() {
@@ -198,14 +196,14 @@ function render() {
         contextMenu.style.display = 'none';
         selected = { name: person.name, day };
         selection.textContent = person.name + ' | ' + day;
-        showSummary(person); showEditor();
+        showSummary(person);
         render();
       });
       cell.addEventListener('contextmenu', (event) => {
         event.preventDefault();
         selected = { name: person.name, day };
         selection.textContent = person.name + ' | ' + day;
-        showSummary(person); showEditor();
+        showSummary(person);
         contextMenu.style.left = Math.min(event.clientX, window.innerWidth - 190) + 'px';
         contextMenu.style.top = Math.min(event.clientY, window.innerHeight - 55) + 'px';
         contextMenu.style.display = 'block';
@@ -225,17 +223,17 @@ document.getElementById('clear').addEventListener('click', () => {
   delete marks[key(selected.name, selected.day)];
   save(); render(); saveDatabase();
 });
-editDay.addEventListener('change', showEditor);
-document.getElementById('saveEdit').addEventListener('click', () => {
+document.getElementById('contextModify').addEventListener('click', () => {
+  contextMenu.style.display = 'none';
   if (!selected) return;
-  const value = editValue.value.trim();
-  if (!/^\d{1,2}:\d{2}\s*-\s*\d{1,2}:\d{2}$/.test(value) && value.toLowerCase() !== 'sin turno') return alert('Usa el formato 8:00 - 17:00 o escribe sin turno.');
-  selected.day = editDay.value; edits[key(selected.name, selected.day)] = value; saveEdits();
-  const person = people.find(p => p.name === selected.name); showSummary(person); render(); showEditor(); saveDatabase();
-});
-document.getElementById('resetEdit').addEventListener('click', () => {
-  if (!selected) return; delete edits[key(selected.name, editDay.value)]; saveEdits();
-  const person = people.find(p => p.name === selected.name); showSummary(person); render(); showEditor();
+  const person = people.find(p => p.name === selected.name);
+  const current = personSchedule(person)[DAYS.indexOf(selected.day)];
+  const value = prompt('Nuevo horario para ' + person.name + ' | ' + selected.day + '\nFormato: 8:00 - 17:00\nTambién puedes escribir: sin turno', current);
+  if (value === null) return;
+  const normalized = value.trim();
+  if (!/^\d{1,2}:\d{2}\s*-\s*\d{1,2}:\d{2}$/.test(normalized) && normalized.toLowerCase() !== 'sin turno') return alert('Usa el formato 8:00 - 17:00 o escribe sin turno.');
+  edits[key(selected.name, selected.day)] = normalized.toLowerCase() === 'sin turno' ? 'sin turno' : normalized;
+  saveEdits(); showSummary(person); render(); saveDatabase();
 });
 document.getElementById('addPerson').addEventListener('click', () => {
   const name = newName.value.trim();
@@ -249,7 +247,6 @@ document.getElementById('addPerson').addEventListener('click', () => {
 document.getElementById('deletePerson').addEventListener('click', () => {
   deleteSelectedPerson();
 });
-document.getElementById('contextModify').addEventListener('click', () => { contextMenu.style.display = 'none'; editForm.hidden = false; editHelp.hidden = true; editValue.focus(); editValue.select(); });
 document.addEventListener('click', () => { contextMenu.style.display = 'none'; });
 search.addEventListener('input', render);
 syncFromDatabase();
