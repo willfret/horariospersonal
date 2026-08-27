@@ -38,6 +38,18 @@
   .context-menu button { padding:9px 12px; font-size:13px; white-space:nowrap; }
   td.day { cursor:pointer; min-width:138px; }
   .inline-schedule-input { width:100%; min-width:112px; box-sizing:border-box; padding:6px; border:2px solid var(--blue); border-radius:6px; font:inherit; }
+  .calendar-tools { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:12px; }
+  .calendar-tools select { flex:1; min-width:220px; padding:9px; border:1px solid #b9cbd8; border-radius:8px; }
+  .calendar-title { text-align:center; font-weight:700; color:#075b93; min-width:150px; }
+  .calendar-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:5px; }
+  .calendar-head, .calendar-day { min-height:72px; padding:7px; border-radius:8px; }
+  .calendar-head { min-height:auto; background:#dfeaf1; color:#234b66; text-align:center; font-size:12px; font-weight:700; }
+  .calendar-day { background:#f5f9fb; border:1px solid #e2ebef; font-size:12px; }
+  .calendar-day.weekend { background:#edf0f2; color:#7a8991; }
+  .calendar-day.empty { background:transparent; border:0; }
+  .calendar-day strong { display:block; color:#075b93; margin-bottom:6px; }
+  .calendar-shift { font-weight:600; }
+  .calendar-comment { margin-top:5px; color:#8a5b00; font-size:11px; }
   td.day:hover { outline:2px solid #75bce1; outline-offset:-2px; }
   td.day.selected { outline:3px solid #0b72b9; outline-offset:-3px; }
   td.total { min-width:120px; font-weight:700; color:var(--blue); white-space:nowrap; }
@@ -80,24 +92,28 @@
     <section class="card panel"><h2>Resumen semanal</h2><div id="summary">Selecciona un trabajador para ver su resumen.</div></section>
     <section class="card panel"><h2>Gestionar personal</h2><label>Nombre del nuevo trabajador</label><input id="newName" type="text" placeholder="Nombre completo"><label>Estado</label><input id="newStatus" type="text" value="Con jornada"><label>Horarios de lunes a viernes</label><div id="newSchedule" class="day-inputs"><div><small>Lunes</small><input type="text" placeholder="8:00 - 17:00"></div><div><small>Martes</small><input type="text" placeholder="8:00 - 17:00"></div><div><small>Miércoles</small><input type="text" placeholder="8:00 - 17:00"></div><div><small>Jueves</small><input type="text" placeholder="8:00 - 17:00"></div><div><small>Viernes</small><input type="text" placeholder="8:00 - 17:00"></div></div><div class="edit-actions"><button id="addPerson">Agregar personal</button><button id="deletePerson" class="secondary">Borrar seleccionado</button></div><div id="manageHelp" class="hint">Usa el formato 8:00 - 17:00. Deja vacío para “sin turno”.</div><div id="editHelp" class="hint">Selecciona un día para editarlo con clic derecho.</div><div id="editForm" hidden><label>Trabajador seleccionado</label><input id="editName" type="text" readonly><label>Día</label><select id="editDay"></select><label>Horario</label><input id="editValue" type="text" placeholder="8:00 - 17:00"><div class="edit-actions"><button id="saveEdit">Guardar horario</button><button id="resetEdit" class="secondary">Restaurar original</button></div></div></section>
   </div>
+  <section class="card panel calendar-card"><h2>Calendario mensual de turnos</h2><div class="calendar-tools"><button id="prevMonth" class="secondary">Mes anterior</button><div id="calendarTitle" class="calendar-title"></div><button id="nextMonth" class="secondary">Mes siguiente</button><select id="calendarPerson"></select></div><div id="calendarGrid" class="calendar-grid"></div></section>
   <section class="card">
     <div class="card-title">Todos los trabajadores</div>
     <div class="table-wrap"><table><thead><tr><th class="id-col">N°</th><th>Nombre</th><th>Estado</th><th>Lunes</th><th>Martes</th><th>Miércoles</th><th>Jueves</th><th>Viernes</th><th>Total semanal</th></tr></thead><tbody id="body"></tbody></table></div>
   </section>
 </main>
-<div id="contextMenu" class="context-menu"><button id="contextModify">Modificar horario</button><button id="contextCopy">Copiar horario</button></div>
+<div id="contextMenu" class="context-menu"><button id="contextModify">Modificar horario</button><button id="contextCopy">Copiar horario</button><button id="contextComment">Agregar comentario</button></div>
 <script>
 const DATA = [{"name":"ACEVEDO CHEUQUEMAN RUAMA SARAI","status":"Con jornada","schedule":["8:10 - 17:30","8:10 - 18:00","8:10 - 17:25","8:10 - 17:10","8:10 - 14:30"]},{"name":"AGUERO VIDAL MARIA NUVIA","status":"Con jornada","schedule":["8:00 - 16:30","8:00 - 16:30","8:00 - 16:30","8:00 - 16:30","8:00 - 14:00"]},{"name":"ALMONACID HARO PEDRO RUBEN","status":"Con jornada","schedule":["7:50 - 16:20","7:55 - 16:20","7:55 - 16:20","7:55 - 16:20","7:55 - 14:00"]},{"name":"ALVARADO ALVARADO NORMA ORIANA","status":"Con jornada","schedule":["8:15 - 16:00","8:15 - 16:00","8:15 - 16:00","8:15 - 16:00","8:15 - 14:15"]},{"name":"ANTILEF MILLAN PAOLA ALEJANDRA","status":"Sin jornada L-V","schedule":["sin turno","sin turno","sin turno","sin turno","sin turno"]},{"name":"ANTIÑANCO POZO MANUEL IVAN","status":"Sin jornada L-V","schedule":["sin turno","sin turno","sin turno","sin turno","sin turno"]},{"name":"ANTIPAN RAPIMAN BERNARDINO EMILIO","status":"Con jornada","schedule":["8:00 - 16:00","8:00 - 16:00","8:00 - 16:00","8:00 - 16:00","8:00 - 14:00"]},{"name":"ASTORGA OROZCO ANGELA","status":"Sin jornada L-V","schedule":["sin turno","sin turno","sin turno","sin turno","sin turno"]},{"name":"ASTORGA OROZCO ANGELA","status":"Con jornada","schedule":["7:50 - 15:30","8:15 - 17:30","12:00 - 14:05","sin turno","sin turno"]},{"name":"BAHAMONDE BAHAMONDE CAROLINA DEL CARMEN","status":"Sin jornada L-V","schedule":["sin turno","sin turno","sin turno","sin turno","sin turno"]},{"name":"BARRA GUZMAN IVAN FERNANDO","status":"Con jornada","schedule":["7:50 - 15:45","7:50 - 18:00","7:50 - 17:30","7:50 - 15:40","7:50 - 13:15"]},{"name":"BURGOS VALENZUELA CARLA MAYERLIN","status":"Con jornada","schedule":["7:50 - 17:10","7:50 - 18:00","7:50 - 17:00","7:50 - 17:00","7:50 - 14:00"]},{"name":"CADIN PAREDES JOSE ALONSO","status":"Con jornada","schedule":["sin turno","7:55 - 18:00","sin turno","7:55 - 17:00","9:00 - 13:50"]},{"name":"CALBUYAHUE CHEUQUEPIL MIRTA OLINDA","status":"Con jornada","schedule":["8:05 - 16:30","8:05 - 16:30","8:05 - 16:30","8:05 - 16:25","8:05 - 14:30"]},{"name":"CARCAMO MALDONADO EVELYN VIVIANA","status":"Con jornada","schedule":["7:50 - 17:10","7:50 - 18:00","7:50 - 17:00","7:50 - 17:00","7:50 - 14:00"]},{"name":"CARCAMO MANSILLA LILIANA LETICIA","status":"Con jornada","schedule":["8:00 - 17:30","8:00 - 17:00","8:00 - 17:30","8:00 - 17:30","8:00 - 13:30"]},{"name":"CAROCCA SEPULVEDA GISSELA MARLENE","status":"Con jornada","schedule":["7:50 - 17:10","7:50 - 18:00","7:50 - 18:00","7:50 - 16:00","7:50 - 14:00"]},{"name":"CASANOVA IGOR ORFELINA DEL CARMEN","status":"Con jornada","schedule":["7:45 - 16:15","7:45 - 16:15","7:45 - 16:00","7:45 - 16:00","7:45 - 14:15"]},{"name":"CASTILLO CHANDIA MARLENE DEL CARMEN","status":"Con jornada","schedule":["7:45 - 15:45","7:45 - 15:45","7:45 - 15:45","7:45 - 15:45","7:45 - 13:45"]},{"name":"COLIVORO COLIVORO MARIA MAGALY","status":"Con jornada","schedule":["7:55 - 14:35","7:55 - 14:30","7:55 - 14:30","7:55 - 14:30","7:55 - 13:30"]},{"name":"COLIVORO VIDAL ANTONIA YOHANA","status":"Con jornada","schedule":["8:05 - 16:15","8:05 - 16:15","8:05 - 16:15","8:05 - 16:10","8:05 - 13:30"]},{"name":"FARFAN MIRANDA SARA FERNANDA","status":"Con jornada","schedule":["7:50 - 17:10","7:50 - 18:00","7:50 - 17:00","7:50 - 17:00","7:50 - 14:00"]},{"name":"GALLARDO GUZMAN HUMBERTO ANTONIO","status":"Con jornada","schedule":["8:10 - 17:30","8:10 - 18:00","8:10 - 17:30","8:10 - 17:10","8:10 - 14:40"]},{"name":"GEOFFROY VERA HANUXA","status":"Con jornada","schedule":["7:50 - 16:45","7:50 - 18:00","7:50 - 16:45","7:50 - 16:40","7:50 - 14:00"]},{"name":"GONZALEZ ALZAMORA EMILIA ANDREA","status":"Con jornada","schedule":["8:00 - 17:30","8:00 - 18:00","8:00 - 16:15","8:00 - 16:15","8:00 - 14:00"]},{"name":"GONZALEZ STUARDO RICARDO ANTONIO","status":"Sin jornada L-V","schedule":["sin turno","sin turno","sin turno","sin turno","sin turno"]},{"name":"GUTIERREZ EISELE GRENNY CAROLINA","status":"Con jornada","schedule":["7:50 - 16:40","7:50 - 18:00","7:50 - 17:00","7:50 - 16:30","8:00 - 14:00"]},{"name":"HARO CARDENAS MARCELA MABEL","status":"Con jornada","schedule":["7:50 - 17:10","7:50 - 18:00","7:50 - 17:00","7:50 - 17:00","7:50 - 14:00"]},{"name":"HARO LOW LUIS ANTONIO","status":"Con jornada","schedule":["8:30 - 18:00","8:30 - 18:00","8:30 - 18:00","8:30 - 18:00","8:30 - 15:00"]},{"name":"JORQUERA GOMEZ KATHERYN XIMENA","status":"Con jornada","schedule":["8:00 - 17:00","8:00 - 18:00","8:00 - 17:00","8:00 - 17:00","8:00 - 14:00"]},{"name":"MANQUEMILLA CARCAMO CRISTINA ADELAIDA","status":"Con jornada","schedule":["8:00 - 17:30","8:00 - 17:30","8:00 - 17:30","8:00 - 17:00","8:00 - 14:30"]},{"name":"MANSILLA DIAZ CRISTIAN HERNAN","status":"Con jornada","schedule":["8:30 - 18:00","8:30 - 18:00","8:30 - 18:00","8:30 - 18:00","9:30 - 15:00"]},{"name":"MARDONES ROJAS OSCAR ALFONSO","status":"Con jornada","schedule":["7:55 - 17:30","7:55 - 18:00","7:55 - 17:05","7:55 - 17:05","sin turno"]},{"name":"MARIN BERNACHEA MARCO ANTONIO","status":"Con jornada","schedule":["sin turno","7:50 - 18:20","sin turno","7:50 - 17:20","sin turno"]},{"name":"MARQUEZ BORQUEZ GERARDO MAXIMILIANO","status":"Con jornada","schedule":["7:50 - 17:00","7:50 - 18:00","7:50 - 17:00","7:50 - 16:40","7:50 - 14:30"]},{"name":"MARQUEZ CARCAMO PAOLA ANDREA","status":"Sin jornada L-V","schedule":["sin turno","sin turno","sin turno","sin turno","sin turno"]},{"name":"MAYORGA OYARZO CARLA ANDREA","status":"Con jornada","schedule":["7:55 - 17:15","7:55 - 18:00","7:55 - 17:10","7:55 - 17:10","7:55 - 14:00"]},{"name":"MILLALDEO RUIZ RICHARD ALEXANDER","status":"Con jornada","schedule":["8:00 - 17:20","8:00 - 18:00","8:00 - 17:20","8:00 - 17:20","8:00 - 14:00"]},{"name":"MILLALDEO VERA VIVIANA DEL CARMEN","status":"Con jornada","schedule":["8:00 - 17:25","8:00 - 17:25","8:00 - 17:20","8:00 - 17:20","8:00 - 14:30"]},{"name":"MIRALLES BARRIA JACQUELINE PAOLA","status":"Sin jornada L-V","schedule":["sin turno","sin turno","sin turno","sin turno","sin turno"]},{"name":"MORAGA CHAURA MARIA LORENA","status":"Sin jornada L-V","schedule":["sin turno","sin turno","sin turno","sin turno","sin turno"]},{"name":"MUÑOZ CUMIN FERNANDO SEBASTIÁN","status":"Sin jornada L-V","schedule":["sin turno","sin turno","sin turno","sin turno","sin turno"]},{"name":"MUÑOZ MUÑOZ YACQUELINE SOLEDAD","status":"Con jornada","schedule":["8:05 - 16:05","8:05 - 16:05","8:05 - 16:05","8:05 - 16:05","8:05 - 14:05"]},{"name":"OJEDA MELIHUECHUN CLARA SOLEDAD","status":"Con jornada","schedule":["8:00 - 17:25","8:00 - 17:25","8:00 - 17:20","8:00 - 17:20","8:00 - 14:30"]},{"name":"OJEDA ULLOA YANETT DEL CARMEN","status":"Sin jornada L-V","schedule":["sin turno","sin turno","sin turno","sin turno","sin turno"]},{"name":"OPAZO CARCAMO JOSUA SEBASTIAN","status":"Con jornada","schedule":["8:00 - 15:40","8:00 - 18:00","8:00 - 15:40","8:00 - 15:40","8:00 - 15:40"]},{"name":"ORMENO DELGADO PRISCILA ANDREA","status":"Con jornada","schedule":["8:05 - 17:25","8:05 - 17:20","8:05 - 17:20","8:05 - 17:20","8:05 - 14:00"]},{"name":"OYARZO ALVARADO ROSA YANETH","status":"Con jornada","schedule":["8:00 - 16:15","8:00 - 16:15","8:00 - 16:15","8:00 - 16:15","8:00 - 14:00"]},{"name":"OYARZO TECAY KATRINA ANDREA","status":"Con jornada","schedule":["7:50 - 17:10","7:50 - 18:00","7:50 - 17:00","7:50 - 17:00","7:50 - 14:00"]},{"name":"PARDO VIDELA NATALY NICOLLE","status":"Con jornada","schedule":["8:10 - 16:00","8:10 - 17:30","8:10 - 16:00","14:00 - 17:00","sin turno"]},{"name":"PEREIRA VALERO ANGELA PAZ","status":"Con jornada","schedule":["7:50 - 17:30","7:50 - 18:00","7:50 - 17:10","7:50 - 16:15","7:50 - 14:15"]},{"name":"PEREZ ESPINOZA CRISTINA FRANCISCA","status":"Sin jornada L-V","schedule":["sin turno","sin turno","sin turno","sin turno","sin turno"]},{"name":"PINO PINO FABIAN ALEXIS","status":"Con jornada","schedule":["7:50 - 17:05","7:50 - 18:00","7:50 - 17:05","7:50 - 17:00","7:50 - 14:00"]},{"name":"RAIMAPO VARGAS JENIFFER ANDREA","status":"Sin jornada L-V","schedule":["sin turno","sin turno","sin turno","sin turno","sin turno"]},{"name":"RAIN AGUERO ROSA ERIKA","status":"Con jornada","schedule":["8:45 - 16:40","8:45 - 17:00","8:45 - 17:00","8:45 - 17:00","8:45 - 14:05"]},{"name":"REYES HERNANDEZ CLAUDIO FERNANDO","status":"Con jornada","schedule":["7:50 - 17:05","7:50 - 18:00","7:50 - 17:05","7:55 - 17:00","7:50 - 14:00"]},{"name":"RIQUELME ALVAREZ JACQUELINE DE LAS ME","status":"Con jornada","schedule":["8:00 - 14:40","8:00 - 18:00","8:00 - 16:20","8:00 - 13:00","sin turno"]},{"name":"RODRIGUEZ MORALES ALEJANDRA ANDREA","status":"Con jornada","schedule":["8:00 - 17:30","8:00 - 18:00","8:00 - 17:15","8:00 - 17:00","8:00 - 14:15"]},{"name":"ROGEL ROGEL JESSICA VIVIANA","status":"Con jornada","schedule":["8:00 - 17:30","8:00 - 18:00","8:00 - 17:00","8:00 - 17:00","8:00 - 14:30"]},{"name":"ROJAS AGUILERA CAROLINA FERNANDA","status":"Con jornada","schedule":["7:55 - 17:15","7:55 - 18:00","7:55 - 17:00","7:55 - 16:20","7:55 - 14:00"]},{"name":"ROJAS NAVARRO ARIEL OBED","status":"Sin jornada L-V","schedule":["sin turno","sin turno","sin turno","sin turno","sin turno"]},{"name":"SANCHEZ GUINEO PAMELA DEL CARMEN","status":"Con jornada","schedule":["7:55 - 15:40","7:55 - 15:40","7:55 - 15:40","7:55 - 15:40","7:55 - 13:55"]},{"name":"SANCHEZ MIRANDA VIVIANA CRISTINA","status":"Con jornada","schedule":["8:00 - 17:30","8:00 - 17:30","8:00 - 17:30","8:00 - 17:00","8:00 - 14:00"]},{"name":"SANCHEZ OBANDO BIANCA JACQUELINE","status":"Con jornada","schedule":["7:50 - 17:10","7:50 - 18:00","7:50 - 17:00","7:50 - 17:00","7:50 - 14:00"]},{"name":"SOTO OYARZO CINTHIA LISSETTE","status":"Con jornada","schedule":["8:00 - 17:30","8:00 - 17:30","8:00 - 17:30","8:00 - 17:00","8:00 - 14:30"]},{"name":"VALDERAS ALVARADO JONATHAN ANDRES","status":"Con jornada","schedule":["8:00 - 17:30","8:00 - 18:00","8:00 - 16:45","8:00 - 16:45","8:00 - 15:00"]},{"name":"VALLE OJEDA LORETO DEL CARMEN","status":"Con jornada","schedule":["8:10 - 17:30","8:10 - 18:00","8:10 - 17:25","8:10 - 17:25","8:10 - 14:30"]},{"name":"VARGAS ARISMENDI MACARENA PAZ","status":"Con jornada","schedule":["7:50 - 17:00","7:50 - 18:00","7:50 - 17:15","7:50 - 16:55","7:50 - 14:00"]},{"name":"VARGAS BARRERA MARIA JOSE","status":"Sin jornada L-V","schedule":["sin turno","sin turno","sin turno","sin turno","sin turno"]},{"name":"VARGAS NAVARRO SANDRA SOLEDAD","status":"Sin jornada L-V","schedule":["sin turno","sin turno","sin turno","sin turno","sin turno"]},{"name":"VELASQUEZ GALVEZ ANGEL IGNACIO","status":"Con jornada","schedule":["7:55 - 15:40","7:55 - 17:00","7:55 - 15:40","7:55 - 15:40","7:55 - 13:35"]},{"name":"VERA GOMEZ CECILIA IRENE","status":"Con jornada","schedule":["7:50 - 17:10","7:50 - 18:00","7:50 - 17:00","7:50 - 17:00","7:50 - 14:00"]},{"name":"VERA MILLALONCO VIVIANA DEL TRANSITO","status":"Con jornada","schedule":["8:30 - 18:00","8:30 - 18:00","8:30 - 18:00","8:30 - 18:00","9:00 - 15:00"]},{"name":"VERA MUÑOZ BARBARA","status":"Con jornada","schedule":["8:10 - 16:20","8:10 - 18:00","8:10 - 16:20","8:10 - 16:10","8:10 - 14:00"]},{"name":"VERA SANTANA DIEGO ALBERTO","status":"Con jornada","schedule":["8:00 - 17:30","8:00 - 17:30","8:00 - 17:30","8:00 - 17:30","8:00 - 14:00"]},{"name":"VERGARA TREIMUN MARIA ALICIA","status":"Con jornada","schedule":["8:30 - 18:00","8:30 - 18:00","8:30 - 18:00","8:30 - 18:00","9:00 - 15:00"]},{"name":"VIDAL IBAÑEZ CARMEN PAULINA","status":"Con jornada","schedule":["7:50 - 17:00","7:50 - 18:00","7:50 - 17:00","7:50 - 17:10","7:50 - 14:00"]},{"name":"VIDAL LEIVA CESAR ANTONIO","status":"Con jornada","schedule":["9:00 - 18:30","9:00 - 18:30","9:00 - 18:30","9:00 - 18:30","9:00 - 15:00"]},{"name":"VILLAGRAN DURAN ARLEN CAROLA","status":"Con jornada","schedule":["7:45 - 17:30","7:45 - 18:00","7:45 - 15:40","7:45 - 15:35","8:00 - 14:00"]},{"name":"VILLARROEL CHIGUAY BERNARDITA DEL CARME","status":"Con jornada","schedule":["7:50 - 17:10","7:50 - 17:10","7:50 - 17:10","7:50 - 17:10","7:50 - 14:30"]},{"name":"YAÑEZ SEPULVEDA CAMILA FERNANDA","status":"Con jornada","schedule":["7:50 - 17:10","7:50 - 18:00","7:50 - 17:00","7:50 - 17:00","7:50 - 14:00"]}];
 const DAYS = ['Lunes','Martes','Miércoles','Jueves','Viernes'];
 const DATABASE_URL = 'https://script.google.com/macros/s/AKfycbz8fsjoOUthaf_xdfqF4Kdh_QxyWPiMJF31AKnTD6KMiEn4071RsU3J7kTv1mnKtFwN/exec';
 const KEY = 'horarios-marcados-v1';
 const EDIT_KEY = 'horarios-editados-v1';
+const COMMENTS_KEY = 'horarios-comentarios-v1';
 const PEOPLE_KEY = 'horarios-personal-v1';
 const marks = JSON.parse(localStorage.getItem(KEY) || '{}');
 const edits = JSON.parse(localStorage.getItem(EDIT_KEY) || '{}');
+const comments = JSON.parse(localStorage.getItem(COMMENTS_KEY) || '{}');
 const people = JSON.parse(localStorage.getItem(PEOPLE_KEY) || 'null') || DATA;
 let selected = null;
 let selectedCell = null;
+let calendarDate = new Date();
 const body = document.getElementById('body');
 const search = document.getElementById('search');
 const color = document.getElementById('color');
@@ -150,12 +166,12 @@ function deleteSelectedPerson() {
   if (!selected) return alert('Primero selecciona un trabajador.');
   if (!confirm('¿Borrar a ' + selected.name + '?')) return;
   const index = people.findIndex(p => p.name === selected.name); if (index >= 0) people.splice(index, 1);
-  DAYS.forEach(day => { delete marks[key(selected.name, day)]; delete edits[key(selected.name, day)]; });
+  DAYS.forEach(day => { delete marks[key(selected.name, day)]; delete edits[key(selected.name, day)]; delete comments[key(selected.name, day)]; });
   localStorage.setItem(PEOPLE_KEY, JSON.stringify(people)); save(); saveEdits(); selected = null; selection.textContent = 'Selecciona una celda de día.'; summary.textContent = 'Selecciona un trabajador para ver su resumen.'; showEditor(); render(); saveDatabase();
 }
 function databaseValues() {
-  const header = ['Nombre','Estado','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo','Color Lunes','Color Martes','Color Miércoles','Color Jueves','Color Viernes'];
-  return [header, ...people.map(person => [person.name, person.status, ...personSchedule(person), 'Descanso', 'Descanso', ...DAYS.map(day => marks[key(person.name, day)] || '')])];
+  const header = ['Nombre','Estado','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo','Color Lunes','Color Martes','Color Miércoles','Color Jueves','Color Viernes','Comentario Lunes','Comentario Martes','Comentario Miércoles','Comentario Jueves','Comentario Viernes'];
+  return [header, ...people.map(person => [person.name, person.status, ...personSchedule(person), 'Descanso', 'Descanso', ...DAYS.map(day => marks[key(person.name, day)] || ''), ...DAYS.map(day => comments[key(person.name, day)] || '')])];
 }
 async function saveDatabase() {
   if (!DATABASE_URL) return;
@@ -177,6 +193,8 @@ async function syncFromDatabase() {
     Object.keys(marks).forEach(k => delete marks[k]);
     result.values.slice(1).forEach(row => { if (!row[0]) return; DAYS.forEach((day, i) => { if (row[9+i]) marks[key(String(row[0]), day)] = String(row[9+i]); }); });
     Object.keys(edits).forEach(k => delete edits[k]);
+    Object.keys(comments).forEach(k => delete comments[k]);
+    result.values.slice(1).forEach(row => { if (!row[0]) return; DAYS.forEach((day, i) => { if (row[14+i]) comments[key(String(row[0]), day)] = String(row[14+i]); }); });
     localStorage.setItem(PEOPLE_KEY, JSON.stringify(people)); save(); saveEdits(); setConnection(true, 'conectado'); render();
   } catch (error) { setConnection(false, 'sin conexión, guardado local'); render(); }
 }
@@ -196,6 +214,7 @@ function render() {
       const day = cell.dataset.day;
       const mark = marks[key(person.name, day)];
       if (mark) cell.style.backgroundColor = mark;
+      if (comments[key(person.name, day)]) cell.title = 'Comentario: ' + comments[key(person.name, day)];
       if (selected && selected.name === person.name && selected.day === day) cell.classList.add('selected');
       cell.addEventListener('click', () => {
         contextMenu.style.display = 'none';
@@ -219,6 +238,30 @@ function render() {
     body.appendChild(tr);
   });
   count.textContent = visible + ' trabajador(es)';
+  renderCalendar();
+}
+function renderCalendar() {
+  const calendarPerson = document.getElementById('calendarPerson');
+  const calendarGrid = document.getElementById('calendarGrid');
+  const calendarTitle = document.getElementById('calendarTitle');
+  const selectedName = calendarPerson.value || selected?.name || people[0]?.name || '';
+  calendarPerson.innerHTML = people.map(person => '<option value="' + esc(person.name) + '">' + esc(person.name) + '</option>').join('');
+  calendarPerson.value = people.some(person => person.name === selectedName) ? selectedName : (people[0]?.name || '');
+  const person = people.find(item => item.name === calendarPerson.value);
+  const year = calendarDate.getFullYear(); const month = calendarDate.getMonth();
+  calendarTitle.textContent = calendarDate.toLocaleDateString('es-CL', { month:'long', year:'numeric' });
+  calendarGrid.innerHTML = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'].map(day => '<div class="calendar-head">' + day + '</div>').join('');
+  if (!person) return;
+  const firstDay = new Date(year, month, 1).getDay(); const totalDays = new Date(year, month + 1, 0).getDate();
+  for (let i = 0; i < firstDay; i++) calendarGrid.innerHTML += '<div class="calendar-day empty"></div>';
+  for (let date = 1; date <= totalDays; date++) {
+    const current = new Date(year, month, date); const dayOfWeek = current.getDay();
+    const weekdayIndex = dayOfWeek === 0 || dayOfWeek === 6 ? -1 : dayOfWeek - 1;
+    const dayName = weekdayIndex >= 0 ? DAYS[weekdayIndex] : '';
+    const shift = weekdayIndex >= 0 ? personSchedule(person)[weekdayIndex] : 'Descanso';
+    const comment = weekdayIndex >= 0 ? comments[key(person.name, dayName)] : '';
+    calendarGrid.innerHTML += '<div class="calendar-day ' + (weekdayIndex < 0 ? 'weekend' : '') + '"><strong>' + date + '</strong><span class="calendar-shift">' + esc(shift) + '</span>' + (comment ? '<div class="calendar-comment">' + esc(comment) + '</div>' : '') + '</div>';
+  }
 }
 document.getElementById('apply').addEventListener('click', () => {
   if (!selected) return alert('Primero selecciona un día de un trabajador.');
@@ -280,6 +323,20 @@ document.getElementById('contextCopy').addEventListener('click', async () => {
     selection.textContent = selected.name + ' | ' + selected.day + ' | Horario copiado';
   }
 });
+document.getElementById('contextComment').addEventListener('click', () => {
+  contextMenu.style.display = 'none';
+  if (!selected) return;
+  const current = comments[key(selected.name, selected.day)] || '';
+  const value = prompt('Comentario para ' + selected.name + ' | ' + selected.day, current);
+  if (value === null) return;
+  const commentKey = key(selected.name, selected.day);
+  if (value.trim()) comments[commentKey] = value.trim(); else delete comments[commentKey];
+  localStorage.setItem(COMMENTS_KEY, JSON.stringify(comments));
+  render(); saveDatabase();
+});
+document.getElementById('prevMonth').addEventListener('click', () => { calendarDate.setMonth(calendarDate.getMonth() - 1); renderCalendar(); });
+document.getElementById('nextMonth').addEventListener('click', () => { calendarDate.setMonth(calendarDate.getMonth() + 1); renderCalendar(); });
+document.getElementById('calendarPerson').addEventListener('change', renderCalendar);
 document.getElementById('addPerson').addEventListener('click', () => {
   const name = newName.value.trim();
   if (!name) return alert('Escribe el nombre del trabajador.');
