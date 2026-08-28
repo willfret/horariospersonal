@@ -64,6 +64,11 @@
   .login-option input { width:auto; padding:0; }
   .login-card button { width:100%; margin-top:18px; }
   .login-error { min-height:20px; margin-top:10px; color:#a43d24; font-size:13px; font-weight:700; }
+  .login-card { padding:0; display:grid; grid-template-columns:1fr 1fr; gap:34px; background:transparent; border:0; box-shadow:none; text-align:left; }
+  .login-brand { display:grid; place-items:center; min-height:380px; }
+  .login-fields { padding:34px; background:white; border-radius:20px; box-shadow:0 15px 40px #062f4d66; }
+  .login-logo { grid-column:auto; grid-row:auto; width:min(360px,100%); height:auto; object-fit:contain; margin:0; border-radius:0; background:transparent; padding:0; box-shadow:none; }
+  .login-card h1, .login-card p, .login-card label, .login-card input, .login-card button, .login-card .login-error { grid-column:auto; }
   #appShell[hidden] { display:none !important; }
   .color-choice { width:29px; height:29px; padding:0; border:3px solid white; border-radius:50%; box-shadow:none; }
   .color-choice.selected { outline:2px solid var(--blue); outline-offset:1px; }
@@ -105,7 +110,7 @@
   #editHelp, #editForm { display:none !important; }
   #deletePerson { display:none !important; }
   @media (max-width:850px) { .panels { grid-template-columns:1fr; } }
-  @media (max-width:700px) { header { padding:18px; } main { padding:14px; } .toolbar { padding:12px; } .login-card { grid-template-columns:1fr; gap:16px; padding:24px; } .login-logo { grid-column:1; grid-row:1; width:150px; height:150px; } .login-card h1, .login-card p { text-align:center; } }
+  @media (max-width:700px) { header { padding:18px; } main { padding:14px; } .toolbar { padding:12px; } .login-card { grid-template-columns:1fr; gap:16px; width:min(420px,100%); } .login-brand { min-height:0; } .login-logo { width:180px; } .login-fields { padding:24px; } .login-card h1, .login-card p { text-align:center; } }
 </style>
 </head>
 <body>
@@ -440,6 +445,12 @@ loginForm.insertBefore(showPasswordLabel, submitLogin);
 const loginLogo = document.createElement('img');
 loginLogo.className = 'login-logo'; loginLogo.src = 'logo%20transparente.png'; loginLogo.alt = 'Logo Escuela Oriente';
 loginForm.insertBefore(loginLogo, loginForm.firstChild);
+const loginBrand = document.createElement('div');
+loginBrand.className = 'login-brand'; loginBrand.appendChild(loginLogo);
+const loginFields = document.createElement('div');
+loginFields.className = 'login-fields';
+[...loginForm.children].forEach(child => { if (child !== loginLogo) loginFields.appendChild(child); });
+loginForm.append(loginBrand, loginFields);
 const rememberUser = document.getElementById('rememberUser');
 const showPassword = document.getElementById('showPassword');
 const logoutButton = document.createElement('button');
