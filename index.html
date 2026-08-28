@@ -39,6 +39,9 @@
   .manual-user-missing { background:#ffc7b8; color:#922f1d; }
   td.name.user-ready { background:#eefaf0; border-left:5px solid #3ba95b; }
   td.name.user-missing { background:#fff0eb; border-left:5px solid #d85b3d; }
+  tr.user-ready-row td.name, tr.user-ready-row td.day { background:#43a047 !important; color:white !important; }
+  tr.user-ready-row td.name { border-left:5px solid #1b5e20; }
+  tr.user-ready-row td.day.no-turn { color:#d9f3df !important; }
   .delete-inline { margin-left:8px; padding:4px 7px; font-size:11px; background:#b44747; opacity:.15; }
   td.name:hover .delete-inline, .delete-inline:focus { opacity:1; }
   .context-menu { position:fixed; display:none; z-index:20; background:white; border:1px solid var(--line); border-radius:8px; box-shadow:0 4px 16px #17324d33; padding:6px; }
@@ -237,6 +240,7 @@ function render() {
     const statusText = flags.users[person.name] === 'ready' ? 'Usuario listo' : flags.users[person.name] === 'missing' ? 'Usuario con falta' : person.status;
     const userNameClass = flags.users[person.name] === 'ready' ? 'user-ready' : flags.users[person.name] === 'missing' ? 'user-missing' : '';
     tr.innerHTML = '<td class="id-col">' + (personIndex + 1) + '</td><td class="name ' + userNameClass + '">' + esc(person.name) + '<button class="delete-inline" title="Borrar trabajador">Borrar</button></td><td><span class="status-badge ' + statusClass + '">' + esc(statusText) + '</span></td>' + personSchedule(person).map((value, index) => '<td class="day ' + (String(value).toLowerCase() === 'sin turno' ? 'no-turn' : '') + '" data-day="' + DAYS[index] + '">' + esc(value) + '</td>').join('') + '<td class="total">' + totalHours(person).toFixed(2).replace('.', ',') + ' h</td>';
+    if (flags.users[person.name] === 'ready') tr.classList.add('user-ready-row');
     tr.querySelector('.name').addEventListener('click', () => { selected = { name: person.name, day: selected?.day || DAYS[0] }; selection.textContent = person.name; showSummary(person); showEditor(); render(); });
     tr.querySelector('.delete-inline').addEventListener('click', (event) => { event.stopPropagation(); selected = { name: person.name, day: DAYS[0] }; deleteSelectedPerson(); });
     tr.querySelectorAll('.day').forEach((cell) => {
