@@ -35,12 +35,18 @@
   .status-badge { display:inline-block; padding:5px 9px; border-radius:999px; font-size:12px; font-weight:700; white-space:nowrap; }
   .status-ready { background:#d9f3df; color:#176b32; }
   .status-missing { background:#ffe0d6; color:#a43d24; }
+  .manual-user-ready { background:#b9edc5; color:#125c29; }
+  .manual-user-missing { background:#ffc7b8; color:#922f1d; }
+  td.name.user-ready { background:#eefaf0; border-left:5px solid #3ba95b; }
+  td.name.user-missing { background:#fff0eb; border-left:5px solid #d85b3d; }
   .delete-inline { margin-left:8px; padding:4px 7px; font-size:11px; background:#b44747; opacity:.15; }
   td.name:hover .delete-inline, .delete-inline:focus { opacity:1; }
   .context-menu { position:fixed; display:none; z-index:20; background:white; border:1px solid var(--line); border-radius:8px; box-shadow:0 4px 16px #17324d33; padding:6px; }
   .context-menu button { padding:9px 12px; font-size:13px; white-space:nowrap; }
   td.day { cursor:pointer; min-width:138px; }
   .inline-schedule-input { width:100%; min-width:112px; box-sizing:border-box; padding:6px; border:2px solid var(--blue); border-radius:6px; font:inherit; }
+  td.day.manual-complete { background:#d9f3df !important; color:#176b32; }
+  td.day.manual-missing { background:#ffe0d6 !important; color:#a43d24; }
   .calendar-tools { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:12px; }
   .calendar-tools select { flex:1; min-width:220px; padding:9px; border:1px solid #b9cbd8; border-radius:8px; }
   .calendar-title { text-align:center; font-weight:700; color:#075b93; min-width:150px; }
@@ -86,6 +92,10 @@
   <input id="color" type="color" value="#fff2cc" title="Color de la marca">
   <button id="apply">Marcar día seleccionado</button>
   <button id="clear" class="secondary">Quitar marca</button>
+  <button id="markUserReady">Usuario listo</button>
+  <button id="markUserMissing" class="secondary">Usuario con falta</button>
+  <button id="markScheduleReady">Horario completo</button>
+  <button id="markScheduleMissing" class="secondary">Horario faltante</button>
   <span id="selection">Selecciona una celda de día.</span>
   <span id="count" class="count"></span>
 </div>
@@ -109,10 +119,12 @@ const DATABASE_URL = 'https://script.google.com/macros/s/AKfycbz8fsjoOUthaf_xdfq
 const KEY = 'horarios-marcados-v1';
 const EDIT_KEY = 'horarios-editados-v1';
 const COMMENTS_KEY = 'horarios-comentarios-v1';
+const FLAGS_KEY = 'horarios-marcas-manuales-v1';
 const PEOPLE_KEY = 'horarios-personal-v1';
 const marks = JSON.parse(localStorage.getItem(KEY) || '{}');
 const edits = JSON.parse(localStorage.getItem(EDIT_KEY) || '{}');
 const comments = JSON.parse(localStorage.getItem(COMMENTS_KEY) || '{}');
+const flags = JSON.parse(localStorage.getItem(FLAGS_KEY) || '{"users":{},"days":{}}');
 const people = JSON.parse(localStorage.getItem(PEOPLE_KEY) || 'null') || DATA;
 let selected = null;
 let selectedCell = null;
@@ -169,12 +181,13 @@ function deleteSelectedPerson() {
   if (!selected) return alert('Primero selecciona un trabajador.');
   if (!confirm('¿Borrar a ' + selected.name + '?')) return;
   const index = people.findIndex(p => p.name === selected.name); if (index >= 0) people.splice(index, 1);
-  DAYS.forEach(day => { delete marks[key(selected.name, day)]; delete edits[key(selected.name, day)]; delete comments[key(selected.name, day)]; });
+  DAYS.forEach(day => { delete marks[key(selected.name, day)]; delete edits[key(selected.name, day)]; delete comments[key(selected.name, day)]; delete flags.days[key(selected.name, day)]; });
+  delete flags.users[selected.name];
   localStorage.setItem(PEOPLE_KEY, JSON.stringify(people)); save(); saveEdits(); selected = null; selection.textContent = 'Selecciona una celda de día.'; summary.textContent = 'Selecciona un trabajador para ver su resumen.'; showEditor(); render(); saveDatabase();
 }
 function databaseValues() {
-  const header = ['Nombre','Estado','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo','Color Lunes','Color Martes','Color Miércoles','Color Jueves','Color Viernes','Comentario Lunes','Comentario Martes','Comentario Miércoles','Comentario Jueves','Comentario Viernes'];
-  return [header, ...people.map(person => [person.name, person.status, ...personSchedule(person), 'Descanso', 'Descanso', ...DAYS.map(day => marks[key(person.name, day)] || ''), ...DAYS.map(day => comments[key(person.name, day)] || '')])];
+  const header = ['Nombre','Estado','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo','Color Lunes','Color Martes','Color Miércoles','Color Jueves','Color Viernes','Comentario Lunes','Comentario Martes','Comentario Miércoles','Comentario Jueves','Comentario Viernes','Estado manual','Marca Lunes','Marca Martes','Marca Miércoles','Marca Jueves','Marca Viernes'];
+  return [header, ...people.map(person => [person.name, person.status, ...personSchedule(person), 'Descanso', 'Descanso', ...DAYS.map(day => marks[key(person.name, day)] || ''), ...DAYS.map(day => comments[key(person.name, day)] || ''), flags.users[person.name] || '', ...DAYS.map(day => flags.days[key(person.name, day)] || '')])];
 }
 async function saveDatabase() {
   if (!DATABASE_URL) return;
@@ -198,7 +211,10 @@ async function syncFromDatabase() {
     Object.keys(edits).forEach(k => delete edits[k]);
     Object.keys(comments).forEach(k => delete comments[k]);
     result.values.slice(1).forEach(row => { if (!row[0]) return; DAYS.forEach((day, i) => { if (row[14+i]) comments[key(String(row[0]), day)] = String(row[14+i]); }); });
-    localStorage.setItem(PEOPLE_KEY, JSON.stringify(people)); save(); saveEdits(); setConnection(true, 'conectado'); render();
+    Object.keys(flags.users).forEach(k => delete flags.users[k]);
+    Object.keys(flags.days).forEach(k => delete flags.days[k]);
+    result.values.slice(1).forEach(row => { if (!row[0]) return; const name = String(row[0]); if (row[19]) flags.users[name] = String(row[19]); DAYS.forEach((day, i) => { if (row[20+i]) flags.days[key(name, day)] = String(row[20+i]); }); });
+    localStorage.setItem(PEOPLE_KEY, JSON.stringify(people)); save(); saveEdits(); localStorage.setItem(COMMENTS_KEY, JSON.stringify(comments)); localStorage.setItem(FLAGS_KEY, JSON.stringify(flags)); setConnection(true, 'conectado'); render();
   } catch (error) { setConnection(false, 'sin conexión, guardado local'); render(); }
 }
 function render() {
@@ -211,14 +227,19 @@ function render() {
     const tr = document.createElement('tr');
     tr.dataset.name = person.name;
     const hasMissingSchedule = personSchedule(person).some(value => String(value).toLowerCase() === 'sin turno');
-    const statusClass = hasMissingSchedule || String(person.status).toLocaleLowerCase('es').includes('sin') ? 'status-missing' : 'status-ready';
-    tr.innerHTML = '<td class="id-col">' + (personIndex + 1) + '</td><td class="name">' + esc(person.name) + '<button class="delete-inline" title="Borrar trabajador">Borrar</button></td><td><span class="status-badge ' + statusClass + '">' + esc(person.status) + '</span></td>' + personSchedule(person).map((value, index) => '<td class="day ' + (String(value).toLowerCase() === 'sin turno' ? 'no-turn' : '') + '" data-day="' + DAYS[index] + '">' + esc(value) + '</td>').join('') + '<td class="total">' + totalHours(person).toFixed(2).replace('.', ',') + ' h</td>';
+    const defaultStatusClass = hasMissingSchedule || String(person.status).toLocaleLowerCase('es').includes('sin') ? 'status-missing' : 'status-ready';
+    const statusClass = flags.users[person.name] === 'ready' ? 'manual-user-ready' : flags.users[person.name] === 'missing' ? 'manual-user-missing' : defaultStatusClass;
+    const statusText = flags.users[person.name] === 'ready' ? 'Usuario listo' : flags.users[person.name] === 'missing' ? 'Usuario con falta' : person.status;
+    const userNameClass = flags.users[person.name] === 'ready' ? 'user-ready' : flags.users[person.name] === 'missing' ? 'user-missing' : '';
+    tr.innerHTML = '<td class="id-col">' + (personIndex + 1) + '</td><td class="name ' + userNameClass + '">' + esc(person.name) + '<button class="delete-inline" title="Borrar trabajador">Borrar</button></td><td><span class="status-badge ' + statusClass + '">' + esc(statusText) + '</span></td>' + personSchedule(person).map((value, index) => '<td class="day ' + (String(value).toLowerCase() === 'sin turno' ? 'no-turn' : '') + '" data-day="' + DAYS[index] + '">' + esc(value) + '</td>').join('') + '<td class="total">' + totalHours(person).toFixed(2).replace('.', ',') + ' h</td>';
     tr.querySelector('.name').addEventListener('click', () => { selected = { name: person.name, day: selected?.day || DAYS[0] }; selection.textContent = person.name; showSummary(person); showEditor(); render(); });
     tr.querySelector('.delete-inline').addEventListener('click', (event) => { event.stopPropagation(); selected = { name: person.name, day: DAYS[0] }; deleteSelectedPerson(); });
     tr.querySelectorAll('.day').forEach((cell) => {
       const day = cell.dataset.day;
       const mark = marks[key(person.name, day)];
       if (mark) cell.style.backgroundColor = mark;
+      if (flags.days[key(person.name, day)] === 'complete') cell.classList.add('manual-complete');
+      if (flags.days[key(person.name, day)] === 'missing') cell.classList.add('manual-missing');
       if (comments[key(person.name, day)]) cell.title = 'Comentario: ' + comments[key(person.name, day)];
       if (selected && selected.name === person.name && selected.day === day) cell.classList.add('selected');
       cell.addEventListener('click', () => {
@@ -338,6 +359,27 @@ document.getElementById('contextComment').addEventListener('click', () => {
   if (value.trim()) comments[commentKey] = value.trim(); else delete comments[commentKey];
   localStorage.setItem(COMMENTS_KEY, JSON.stringify(comments));
   render(); saveDatabase();
+});
+function requireSelection() {
+  if (!selected) { alert('Selecciona primero el nombre o un horario.'); return false; }
+  return true;
+}
+function saveFlags() { localStorage.setItem(FLAGS_KEY, JSON.stringify(flags)); render(); saveDatabase(); }
+document.getElementById('markUserReady').addEventListener('click', () => {
+  if (!requireSelection()) return;
+  flags.users[selected.name] = 'ready'; saveFlags();
+});
+document.getElementById('markUserMissing').addEventListener('click', () => {
+  if (!requireSelection()) return;
+  flags.users[selected.name] = 'missing'; saveFlags();
+});
+document.getElementById('markScheduleReady').addEventListener('click', () => {
+  if (!requireSelection()) return;
+  flags.days[key(selected.name, selected.day)] = 'complete'; saveFlags();
+});
+document.getElementById('markScheduleMissing').addEventListener('click', () => {
+  if (!requireSelection()) return;
+  flags.days[key(selected.name, selected.day)] = 'missing'; saveFlags();
 });
 document.getElementById('prevMonth').addEventListener('click', () => { calendarDate.setMonth(calendarDate.getMonth() - 1); renderCalendar(); });
 document.getElementById('nextMonth').addEventListener('click', () => { calendarDate.setMonth(calendarDate.getMonth() + 1); renderCalendar(); });
