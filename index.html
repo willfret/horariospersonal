@@ -62,6 +62,7 @@
   .login-option input { width:auto; padding:0; }
   .login-card button { width:100%; margin-top:18px; }
   .login-error { min-height:20px; margin-top:10px; color:#a43d24; font-size:13px; font-weight:700; }
+  #appShell[hidden] { display:none !important; }
   .color-choice { width:29px; height:29px; padding:0; border:3px solid white; border-radius:50%; box-shadow:none; }
   .color-choice.selected { outline:2px solid var(--blue); outline-offset:1px; }
   td.day.manual-complete { background:#d9f3df !important; color:#176b32; }
@@ -442,7 +443,7 @@ const showPassword = document.getElementById('showPassword');
 loginUserInput.value = localStorage.getItem('horarios-usuario-recordado') || '';
 rememberUser.checked = Boolean(loginUserInput.value);
 showPassword.addEventListener('change', () => { loginPasswordInput.type = showPassword.checked ? 'text' : 'password'; });
-function unlockApp() { loginScreen.hidden = true; appShell.hidden = false; }
+function unlockApp() { loginScreen.hidden = true; loginScreen.style.display = 'none'; appShell.hidden = false; appShell.style.display = 'block'; }
 loginForm.addEventListener('submit', (event) => {
   event.preventDefault();
   const user = document.getElementById('loginUser').value.trim();
