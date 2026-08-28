@@ -456,12 +456,11 @@ loginForm.addEventListener('submit', (event) => {
   const password = document.getElementById('loginPassword').value;
   if (user === LOGIN_USER && password === LOGIN_PASSWORD) {
     if (rememberUser.checked) localStorage.setItem('horarios-usuario-recordado', user); else localStorage.removeItem('horarios-usuario-recordado');
-    sessionStorage.setItem('horarios-login', 'ok'); loginError.textContent = ''; unlockApp();
+    loginError.textContent = ''; unlockApp();
   } else {
     loginError.textContent = 'Usuario o contraseña incorrectos.';
   }
 });
-if (sessionStorage.getItem('horarios-login') === 'ok') unlockApp();
 search.addEventListener('input', render);
 syncFromDatabase();
 </script>
