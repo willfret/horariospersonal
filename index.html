@@ -57,6 +57,8 @@
   .login-card p { margin:0 0 20px; color:#607d8b; }
   .login-card label { display:block; margin:12px 0 5px; text-align:left; color:#234b66; font-size:13px; font-weight:700; }
   .login-card input { width:100%; padding:11px; border:1px solid #b9cbd8; border-radius:8px; font-size:15px; }
+  .login-option { display:flex !important; align-items:center; gap:8px; margin:10px 0 0 !important; font-weight:600 !important; }
+  .login-option input { width:auto; padding:0; }
   .login-card button { width:100%; margin-top:18px; }
   .login-error { min-height:20px; margin-top:10px; color:#a43d24; font-size:13px; font-weight:700; }
   .color-choice { width:29px; height:29px; padding:0; border:3px solid white; border-radius:50%; box-shadow:none; }
@@ -419,12 +421,29 @@ const loginForm = document.getElementById('loginForm');
 const loginScreen = document.getElementById('loginScreen');
 const appShell = document.getElementById('appShell');
 const loginError = document.getElementById('loginError');
+const loginUserInput = document.getElementById('loginUser');
+const loginPasswordInput = document.getElementById('loginPassword');
+const submitLogin = loginForm.querySelector('button[type="submit"]');
+const rememberLabel = document.createElement('label');
+rememberLabel.className = 'login-option';
+rememberLabel.innerHTML = '<input id="rememberUser" type="checkbox"> Recordar usuario';
+loginForm.insertBefore(rememberLabel, submitLogin);
+const showPasswordLabel = document.createElement('label');
+showPasswordLabel.className = 'login-option';
+showPasswordLabel.innerHTML = '<input id="showPassword" type="checkbox"> Mostrar contraseña';
+loginForm.insertBefore(showPasswordLabel, submitLogin);
+const rememberUser = document.getElementById('rememberUser');
+const showPassword = document.getElementById('showPassword');
+loginUserInput.value = localStorage.getItem('horarios-usuario-recordado') || '';
+rememberUser.checked = Boolean(loginUserInput.value);
+showPassword.addEventListener('change', () => { loginPasswordInput.type = showPassword.checked ? 'text' : 'password'; });
 function unlockApp() { loginScreen.hidden = true; appShell.hidden = false; }
 loginForm.addEventListener('submit', (event) => {
   event.preventDefault();
   const user = document.getElementById('loginUser').value.trim();
   const password = document.getElementById('loginPassword').value;
   if (user === LOGIN_USER && password === LOGIN_PASSWORD) {
+    if (rememberUser.checked) localStorage.setItem('horarios-usuario-recordado', user); else localStorage.removeItem('horarios-usuario-recordado');
     sessionStorage.setItem('horarios-login', 'ok'); loginError.textContent = ''; unlockApp();
   } else {
     loginError.textContent = 'Usuario o contraseña incorrectos.';
