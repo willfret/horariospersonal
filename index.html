@@ -93,9 +93,6 @@
   <button id="apply">Marcar día seleccionado</button>
   <button id="clear" class="secondary">Quitar marca</button>
   <button id="markUserReady">Usuario listo</button>
-  <button id="markUserMissing" class="secondary">Usuario con falta</button>
-  <button id="markScheduleReady">Horario completo</button>
-  <button id="markScheduleMissing" class="secondary">Horario faltante</button>
   <span id="selection">Selecciona una celda de día.</span>
   <span id="count" class="count"></span>
 </div>
@@ -368,18 +365,6 @@ function saveFlags() { localStorage.setItem(FLAGS_KEY, JSON.stringify(flags)); r
 document.getElementById('markUserReady').addEventListener('click', () => {
   if (!requireSelection()) return;
   flags.users[selected.name] = 'ready'; saveFlags();
-});
-document.getElementById('markUserMissing').addEventListener('click', () => {
-  if (!requireSelection()) return;
-  flags.users[selected.name] = 'missing'; saveFlags();
-});
-document.getElementById('markScheduleReady').addEventListener('click', () => {
-  if (!requireSelection()) return;
-  flags.days[key(selected.name, selected.day)] = 'complete'; saveFlags();
-});
-document.getElementById('markScheduleMissing').addEventListener('click', () => {
-  if (!requireSelection()) return;
-  flags.days[key(selected.name, selected.day)] = 'missing'; saveFlags();
 });
 document.getElementById('prevMonth').addEventListener('click', () => { calendarDate.setMonth(calendarDate.getMonth() - 1); renderCalendar(); });
 document.getElementById('nextMonth').addEventListener('click', () => { calendarDate.setMonth(calendarDate.getMonth() + 1); renderCalendar(); });
