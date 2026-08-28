@@ -51,8 +51,9 @@
   .color-palette { display:flex; gap:5px; align-items:center; padding:3px; border:1px solid #b9cbd8; border-radius:999px; background:white; }
   #colorPalette, .palette-label { display:none; }
   .palette-label { color:#476276; font-size:12px; font-weight:700; }
-  .login-screen { min-height:100vh; display:grid; place-items:center; padding:20px; background:linear-gradient(135deg,#064d7d,#20a5c7); }
+  .login-screen { position:fixed; inset:0; z-index:100; min-height:100vh; display:grid; place-items:center; padding:20px; background:linear-gradient(135deg,#064d7d,#20a5c7); }
   .login-card { width:min(420px,100%); padding:30px; background:white; border-radius:20px; box-shadow:0 15px 40px #062f4d66; text-align:center; }
+  .login-logo { width:105px; height:105px; object-fit:contain; margin:0 auto 12px; border-radius:50%; }
   .login-card h1 { margin:0 0 8px; color:#075b93; }
   .login-card p { margin:0 0 20px; color:#607d8b; }
   .login-card label { display:block; margin:12px 0 5px; text-align:left; color:#234b66; font-size:13px; font-weight:700; }
@@ -432,6 +433,9 @@ const showPasswordLabel = document.createElement('label');
 showPasswordLabel.className = 'login-option';
 showPasswordLabel.innerHTML = '<input id="showPassword" type="checkbox"> Mostrar contraseña';
 loginForm.insertBefore(showPasswordLabel, submitLogin);
+const loginLogo = document.createElement('img');
+loginLogo.className = 'login-logo'; loginLogo.src = 'logo%20transparente.png'; loginLogo.alt = 'Logo Escuela Oriente';
+loginForm.insertBefore(loginLogo, loginForm.firstChild);
 const rememberUser = document.getElementById('rememberUser');
 const showPassword = document.getElementById('showPassword');
 loginUserInput.value = localStorage.getItem('horarios-usuario-recordado') || '';
