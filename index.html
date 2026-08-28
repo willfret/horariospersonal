@@ -32,6 +32,9 @@
   td.name { font-weight:650; white-space:nowrap; }
   td.name { position:relative; }
   th.id-col, td.id-col { width:60px; min-width:60px; text-align:center; font-weight:700; color:var(--blue); }
+  .status-badge { display:inline-block; padding:5px 9px; border-radius:999px; font-size:12px; font-weight:700; white-space:nowrap; }
+  .status-ready { background:#d9f3df; color:#176b32; }
+  .status-missing { background:#ffe0d6; color:#a43d24; }
   .delete-inline { margin-left:8px; padding:4px 7px; font-size:11px; background:#b44747; opacity:.15; }
   td.name:hover .delete-inline, .delete-inline:focus { opacity:1; }
   .context-menu { position:fixed; display:none; z-index:20; background:white; border:1px solid var(--line); border-radius:8px; box-shadow:0 4px 16px #17324d33; padding:6px; }
@@ -207,7 +210,9 @@ function render() {
     visible++;
     const tr = document.createElement('tr');
     tr.dataset.name = person.name;
-    tr.innerHTML = '<td class="id-col">' + (personIndex + 1) + '</td><td class="name">' + esc(person.name) + '<button class="delete-inline" title="Borrar trabajador">Borrar</button></td><td>' + esc(person.status) + '</td>' + personSchedule(person).map((value, index) => '<td class="day ' + (String(value).toLowerCase() === 'sin turno' ? 'no-turn' : '') + '" data-day="' + DAYS[index] + '">' + esc(value) + '</td>').join('') + '<td class="total">' + totalHours(person).toFixed(2).replace('.', ',') + ' h</td>';
+    const hasMissingSchedule = personSchedule(person).some(value => String(value).toLowerCase() === 'sin turno');
+    const statusClass = hasMissingSchedule || String(person.status).toLocaleLowerCase('es').includes('sin') ? 'status-missing' : 'status-ready';
+    tr.innerHTML = '<td class="id-col">' + (personIndex + 1) + '</td><td class="name">' + esc(person.name) + '<button class="delete-inline" title="Borrar trabajador">Borrar</button></td><td><span class="status-badge ' + statusClass + '">' + esc(person.status) + '</span></td>' + personSchedule(person).map((value, index) => '<td class="day ' + (String(value).toLowerCase() === 'sin turno' ? 'no-turn' : '') + '" data-day="' + DAYS[index] + '">' + esc(value) + '</td>').join('') + '<td class="total">' + totalHours(person).toFixed(2).replace('.', ',') + ' h</td>';
     tr.querySelector('.name').addEventListener('click', () => { selected = { name: person.name, day: selected?.day || DAYS[0] }; selection.textContent = person.name; showSummary(person); showEditor(); render(); });
     tr.querySelector('.delete-inline').addEventListener('click', (event) => { event.stopPropagation(); selected = { name: person.name, day: DAYS[0] }; deleteSelectedPerson(); });
     tr.querySelectorAll('.day').forEach((cell) => {
