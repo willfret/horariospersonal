@@ -46,6 +46,7 @@
   td.day { cursor:pointer; min-width:138px; }
   .inline-schedule-input { width:100%; min-width:112px; box-sizing:border-box; padding:6px; border:2px solid var(--blue); border-radius:6px; font:inherit; }
   .color-palette { display:flex; gap:5px; align-items:center; padding:3px; border:1px solid #b9cbd8; border-radius:999px; background:white; }
+  #colorPalette, .palette-label { display:none; }
   .palette-label { color:#476276; font-size:12px; font-weight:700; }
   .color-choice { width:29px; height:29px; padding:0; border:3px solid white; border-radius:50%; box-shadow:none; }
   .color-choice.selected { outline:2px solid var(--blue); outline-offset:1px; }
@@ -94,7 +95,7 @@
 <div class="toolbar">
   <input id="search" type="search" placeholder="Buscar por nombre..." autocomplete="off">
   <div id="colorPalette" class="color-palette" title="Elige un color para marcar el horario"><button type="button" class="color-choice selected" data-color="#fff2cc" style="background:#fff2cc" aria-label="Amarillo"></button><button type="button" class="color-choice" data-color="#b9edc5" style="background:#b9edc5" aria-label="Verde"></button><button type="button" class="color-choice" data-color="#b9ddf5" style="background:#b9ddf5" aria-label="Azul"></button><button type="button" class="color-choice" data-color="#ffc7b8" style="background:#ffc7b8" aria-label="Rojo"></button><button type="button" class="color-choice" data-color="#ffe0a8" style="background:#ffe0a8" aria-label="Naranjo"></button><button type="button" class="color-choice" data-color="#d9c2f0" style="background:#d9c2f0" aria-label="Morado"></button></div>
-  <span class="palette-label">Fuertes:</span><div class="color-palette strong-palette" title="Colores fuertes"><button type="button" class="color-choice" data-color="#43a047" style="background:#43a047" aria-label="Verde fuerte"></button><button type="button" class="color-choice" data-color="#1e88e5" style="background:#1e88e5" aria-label="Azul fuerte"></button><button type="button" class="color-choice" data-color="#e53935" style="background:#e53935" aria-label="Rojo fuerte"></button><button type="button" class="color-choice" data-color="#f9a825" style="background:#f9a825" aria-label="Amarillo fuerte"></button><button type="button" class="color-choice" data-color="#fb8c00" style="background:#fb8c00" aria-label="Naranjo fuerte"></button><button type="button" class="color-choice" data-color="#8e44ad" style="background:#8e44ad" aria-label="Morado fuerte"></button></div>
+  <div class="color-palette strong-palette" title="Elige un color"><button type="button" class="color-choice selected" data-color="#43a047" style="background:#43a047" aria-label="Verde"></button><button type="button" class="color-choice" data-color="#1e88e5" style="background:#1e88e5" aria-label="Azul"></button><button type="button" class="color-choice" data-color="#e53935" style="background:#e53935" aria-label="Rojo"></button><button type="button" class="color-choice" data-color="#f9a825" style="background:#f9a825" aria-label="Amarillo"></button><button type="button" class="color-choice" data-color="#fb8c00" style="background:#fb8c00" aria-label="Naranjo"></button><button type="button" class="color-choice" data-color="#8e44ad" style="background:#8e44ad" aria-label="Morado"></button></div>
   <button id="apply">Marcar día seleccionado</button>
   <button id="clear" class="secondary">Quitar marca</button>
   <button id="markUserReady">Usuario listo</button>
@@ -134,7 +135,7 @@ let selectedCell = null;
 let calendarDate = new Date();
 const body = document.getElementById('body');
 const search = document.getElementById('search');
-let selectedColor = '#fff2cc';
+let selectedColor = '#43a047';
 const colorChoices = [...document.querySelectorAll('.color-choice')];
 const selection = document.getElementById('selection');
 const count = document.getElementById('count');
