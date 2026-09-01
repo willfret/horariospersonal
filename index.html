@@ -425,8 +425,10 @@ document.getElementById('deletePerson').addEventListener('click', () => {
   deleteSelectedPerson();
 });
 document.addEventListener('click', () => { contextMenu.style.display = 'none'; });
-const LOGIN_USER = 'adminescuelaoriente';
-const LOGIN_PASSWORD = 'oriente22380';
+const LOGIN_ACCOUNTS = [
+  { user: 'adminescuelaoriente', password: 'oriente22380' },
+  { user: 'nuvia.aguero@escuelaoriente.cl', password: 'oriente2026' }
+];
 const loginForm = document.getElementById('loginForm');
 const loginScreen = document.getElementById('loginScreen');
 const appShell = document.getElementById('appShell');
@@ -463,9 +465,9 @@ function unlockApp() { loginScreen.hidden = true; loginScreen.style.display = 'n
 logoutButton.addEventListener('click', () => { sessionStorage.removeItem('horarios-login'); appShell.hidden = true; appShell.style.display = 'none'; loginScreen.hidden = false; loginScreen.style.display = 'grid'; loginPasswordInput.value = ''; loginError.textContent = ''; });
 loginForm.addEventListener('submit', (event) => {
   event.preventDefault();
-  const user = document.getElementById('loginUser').value.trim();
+  const user = document.getElementById('loginUser').value.trim().toLowerCase();
   const password = document.getElementById('loginPassword').value;
-  if (user === LOGIN_USER && password === LOGIN_PASSWORD) {
+  if (LOGIN_ACCOUNTS.some(account => account.user === user && account.password === password)) {
     if (rememberUser.checked) localStorage.setItem('horarios-usuario-recordado', user); else localStorage.removeItem('horarios-usuario-recordado');
     loginError.textContent = ''; unlockApp();
   } else {
